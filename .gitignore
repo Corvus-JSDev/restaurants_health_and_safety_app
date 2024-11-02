@@ -11,7 +11,7 @@ __pycache__/
 
 # Virtual environment folders for Python
 .venv/
-.env/
+.env
 
 # IDE/editor config files
 .idea/
