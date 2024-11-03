@@ -33,9 +33,18 @@ def get_list_of_states():
 	return [state[0] for state in list_of_states]
 
 
+def get_list_of_counties(selected_state):
+	with sqlite3.connect(path_to_db) as connect:
+		cursor = connect.cursor()
+		cursor.execute(f"SELECT * FROM {selected_state}")
+		list_of_counties = cursor.fetchall()
+	return [county[0] for county in list_of_counties]
+
+
+
 
 
 if __name__ == "__main__":
 	print('RUNNING: helpers.py\n')
-	#states_list = get_list_of_states()
+	#states_list = get_list_of_counties("Alabama")
 	#print(states_list)

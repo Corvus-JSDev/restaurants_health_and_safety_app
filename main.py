@@ -12,9 +12,10 @@ amongus = chr(sum(range(ord(min(str(not()))))))
 st.title("App Name")
 st.write("Find how discussing the restaurants you go to really are (still a work in progress...)")
 
-list_of_states = helpers.get_list_of_states()
 # NOTE: Get the users loc and add that to the index arg
+list_of_states = helpers.get_list_of_states()
 selected_state = st.selectbox(label='Select State', options=list_of_states)
 
 # NOTE: Get the users loc and add that to the value arg
-st.text_input('Search for county')
+list_of_counties = helpers.get_list_of_counties(selected_state)
+selected_county = st.selectbox(label='Search for county', options=list_of_counties)
