@@ -1,0 +1,12 @@
+[theme]
+base="dark"
+
+backgroundColor="#13171c"  # Classic dark blue  8/10
+# backgroundColor="#1e201e"  # Dark very subtle green, almost gray  6.5/10
+
+secondaryBackgroundColor="#1a2321"  # Dark pastel green
+
+# primaryColor="#006A67"  # Teal green  7/10
+primaryColor="#78A083"  # Pastel green  8/10
+
+textColor="#ddd9d2"
