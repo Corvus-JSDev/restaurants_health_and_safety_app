@@ -1,7 +1,9 @@
 import os
-from src import data_collection
+from . import data_collection
+import sqlite3
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
+path_to_db = f"{current_directory}/../data/sql_data/CountiesByState.db"
 
 
 def ensure_county_data_is_installed():
@@ -15,10 +17,25 @@ def ensure_county_data_is_installed():
 
 
 def ensure_sql_database_exists():
-	file_path = f"{current_directory}/../data/sql_data/CountiesByState.db"
-	if not os.path.exists(file_path):
+	if not os.path.exists(path_to_db):
 		print('\033[33m SQL database not found. Creating database... \033[0m')
 		data_collection.create_sql_database()
 		print('\033[32m  \u2713 Database created. \033[0m')
 	else:
 		print("\033[32m  \u2713 SQL Database found. \033[0m")
+
+
+def get_list_of_states():
+	with sqlite3.connect(path_to_db) as connect:
+		cursor = connect.cursor()
+		cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+		list_of_states = cursor.fetchall()
+	return [state[0] for state in list_of_states]
+
+
+
+
+if __name__ == "__main__":
+	print('RUNNING: helpers.py\n')
+	#states_list = get_list_of_states()
+	#print(states_list)
