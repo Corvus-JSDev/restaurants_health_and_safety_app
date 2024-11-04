@@ -1,21 +1,28 @@
 import streamlit as st  # python3 -m streamlit run main.py
 from src import helpers
+import time
 
-# Print the among us character
-amongus = chr(sum(range(ord(min(str(not()))))))
+amongus = chr(sum(range(ord(min(str(not()))))))  # The among us character, lol
 
-# print(f"\n----- Prerequisite Checks -----\n")
-# helpers.ensure_county_data_is_installed()
-# helpers.ensure_sql_database_exists()
-# print(f"\n----- Prerequisite Complete! -----\n")
+with st.spinner('Loading...'):
+	print("\n  ----- Checking Prerequisites -----\n")
+	helpers.ensure_county_data_is_installed()
+	helpers.ensure_sql_database_exists()
+	print("\n  ----- Prerequisites Complete -----\n")
 
+
+# === HERO ===
 st.title("App Name")
 st.write("Find how discussing the restaurants you go to really are (still a work in progress...)")
 
-# NOTE: Get the users loc and add that to the index arg
-list_of_states = helpers.get_list_of_states()
-selected_state = st.selectbox(label='Select State', options=list_of_states)
 
-# NOTE: Get the users loc and add that to the value arg
+# === LOCATION SELECTION ===
+list_of_states = helpers.get_list_of_states()
+st.markdown('##### Select State')
+selected_state = st.selectbox(label='Select State', options=list_of_states, index=helpers.loc_state(list_of_states),
+	placeholder='Find your state', label_visibility='collapsed')
+
+st.markdown('##### Select County')
 list_of_counties = helpers.get_list_of_counties(selected_state)
-selected_county = st.selectbox(label='Search for county', options=list_of_counties)
+selected_county = st.selectbox(label='Select County', options=list_of_counties, index=None,
+	placeholder='Find your county', label_visibility='collapsed')

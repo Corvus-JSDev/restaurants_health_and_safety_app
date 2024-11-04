@@ -1,6 +1,7 @@
 import os
 from . import data_collection
 import sqlite3
+import geocoder  # NOTE: For some reason pyright is saying this could not be resolved, even tho it works perfectly fine... i hate pyright.
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 path_to_db = f"{current_directory}/../data/sql_data/CountiesByState.db"
@@ -41,10 +42,15 @@ def get_list_of_counties(selected_state):
 	return [county[0] for county in list_of_counties]
 
 
+def loc_state(list_of_states):
+	g = geocoder.ip('me')
+	state_name = g.state if g.ok else None
+	return next((index for index, state in enumerate(list_of_states) if state == state_name), None)
+
+
 
 
 
 if __name__ == "__main__":
 	print('RUNNING: helpers.py\n')
-	#states_list = get_list_of_counties("Alabama")
-	#print(states_list)
+	print('-------------------\n')
