@@ -28,3 +28,4 @@ def create_sql_database():
 			state_counties = df.loc[ df['state'] == state ][['county']]
 			# Create the tables and populate them
 			state_counties.to_sql(state, connect, if_exists='replace', index=False)
+
