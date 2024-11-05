@@ -1,6 +1,12 @@
 import streamlit as st  # python3 -m streamlit run main.py
 from src import helpers
-import time
+import os
+import pandas as pd
+from sodapy import Socrata
+from dotenv import load_dotenv
+load_dotenv()
+
+MY_KEY = os.getenv('MY_KEY')
 
 amongus = chr(sum(range(ord(min(str(not()))))))  # The among us character, lol
 
