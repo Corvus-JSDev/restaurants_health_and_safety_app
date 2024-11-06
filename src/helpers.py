@@ -1,9 +1,17 @@
 import os
+import pandas as pd
 from . import data_collection
 import sqlite3
 import geocoder  # NOTE: For some reason pyright is saying this could not be resolved, even tho it works perfectly fine... i hate pyright.
 
-list_of_supported_states = ['new york']
+list_of_supported_states = ['new york', 'pennsylvania']
+
+color_red = '#fc5050'
+color_orange = '#fcbc4e'
+color_green = '#3edd60'
+color_default = "#d0ccc6"
+
+
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 path_to_db = f"{current_directory}/../data/sql_data/CountiesByState.db"
@@ -51,21 +59,46 @@ def loc_state():
 	return next((index for index, state in enumerate(list_of_states) if state == state_name), None)
 
 
-def color_column(score):
+def is_empty(obj):
+    if isinstance(obj, pd.DataFrame):
+        return obj.empty
+    elif isinstance(obj, pd.io.formats.style.Styler):
+        return obj.data.empty
+    else:
+        raise TypeError("Input must be a pandas DataFrame or Styler.")
+
+
+def ny_color_column(score):
 	if score == 'N/A':
-		return f'background-color: black'
+		return f'color: {color_default};'
+
 	try:
 		score = float(score)
 	except ValueError:
-		return f'background-color: black'
+		return f'color: {color_default};'
 
 	if score >= 6:
-		color = '#9e382f'  # Red
+		color = color_red
 	elif score >= 4:
-		color = '#896018'  # Orange
+		color = color_orange
 	else:
-		color = '#4a7231'  # Green
-	return f'background-color: {color}'
+		color = color_green
+	return f'color: {color};'
+
+def pa_color_column(passed):
+	if passed == 'Yes':
+		color = color_green
+	elif passed == 'No':
+		color = color_red
+	else:
+		color = color_default
+
+	return f'color: {color};'
+
+
+def highlight_alternate_rows(row):
+	return ['background-color: #1c1f28' if i % 2 == 0 else 'background-color: #242833' for i in range(len(row))]
+
 
 
 

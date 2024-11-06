@@ -1,4 +1,4 @@
-from re import L
+#from re import L
 import censusdis.data as ced
 from censusdis.datasets import ACS5
 import censusdis.states as states
@@ -36,7 +36,7 @@ def create_sql_database():
 			state_counties.to_sql(state, connect, if_exists='replace', index=False)
 
 
-NY_APP_TOKEN = os.getenv('NY_APP_TOKEN')
+NY_APP_TOKEN = os.getenv('NY_APP_TOKEN') or None
 def get_NY_health_inspection_data(county, resturant_name=''):
 	county = county.split()[0].upper()  # The reason we use upper is because gov APIs suck.
 	resturant_query = f'AND facility == \'{resturant_name}\'' if resturant_name else ''
@@ -48,6 +48,7 @@ def get_NY_health_inspection_data(county, resturant_name=''):
 	    *
 	WHERE
 	    date > '{str(date.today() - relativedelta(years=5))}'
+		{county_query}
 	"""
 
 	# Getting the data itself
@@ -56,8 +57,6 @@ def get_NY_health_inspection_data(county, resturant_name=''):
 	client.close()
 
 	df = pd.DataFrame.from_records(results)
-
-	df = df.loc[ df['county'] == county ]
 
 	# This is here because for some reason NY doesn't want to share their data for some counties. Can you tell I hate working with gov APIs yet? Like honestly, how hard is it to have data for all of YOUR OWN counties?
 	if df.empty:
@@ -95,7 +94,7 @@ def get_NY_health_inspection_data(county, resturant_name=''):
 			return "N/A"
 		else:
 			answer = (((row['Repeat Violations'] + (0.50 * row['Repeat Violations'])) + row['Critical Violations'] + (row['Minor Violations'] - (0.30 * row['Minor Violations']))) / inspection_count)
-			return round(answer, 1)
+			return str(round(answer, 1))
 
 	# Finishing touches
 	df['Risk Score'] = df.apply(calc_risk_score, axis=1)
@@ -103,4 +102,46 @@ def get_NY_health_inspection_data(county, resturant_name=''):
 	df['Address'] = df['Address'].str.title()
 	df['Earliest Recorded Inspection'] = df['Earliest Recorded Inspection'].str.split('T').str.get(0)
 
-	return df
+	df = df.rename(columns={'Earliest Recorded Inspection': "Earliest Recorded Inspection (Y-M-D)"})
+	# Moves the risk score and name column to the front
+	cols = ['Risk Score', 'Name'] + [col for col in df.columns if col != 'Risk Score' and col != 'Name']
+
+
+	return df[cols]
+
+
+PA_APP_TOKEN = os.getenv('PA_APP_TOKEN') or None
+def get_PA_health_inspection_data(county, resturant_name=''):
+    county = county.split()[0].title()
+    county_query = f'county_name == \'{county}\'' if county else ''
+    resturant_query = f'AND facility == \'{resturant_name}\'' if resturant_name else ''
+
+    # The query that will be pulling only the needed data (pulling data from 5 years ago from today)
+    query = f"""
+    SELECT
+        *
+    WHERE
+        {county_query}
+    """
+
+    # Getting the data itself
+    client = Socrata("data.pa.gov", PA_APP_TOKEN)
+    results = client.get("etb6-jzdg", query=query)
+    client.close()
+
+    df = pd.DataFrame.from_records(results).fillna("N/A").rename(columns={
+        'public_facility_name': "Name",
+        'address': "Address",
+        'city': "City",
+        'inspection_date': "Inspection Date",
+        'inspection_reason_type': "Reason For Inspection",
+        'overall_compliance': "Passed Inspection",
+    })
+    df = df[['Passed Inspection', 'Name', 'Address', 'City', 'Inspection Date', 'Reason For Inspection']]
+
+    if df.empty:
+        return df
+
+    df.drop_duplicates("Name", keep='last', inplace=True)
+    df['Inspection Date'] = df['Inspection Date'].str.split('T').str.get(0)
+    return df

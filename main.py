@@ -1,3 +1,4 @@
+from censusdis.impl.geometry import T
 import streamlit as st  # python3 -m streamlit run main.py
 from src import helpers
 from src import data_collection
@@ -35,7 +36,7 @@ def disclaimer():
     """)
 col1, col2 = st.columns([5, 1])
 with col1:
-		st.warning('For the latest information, check your local health department\'s website.')
+		st.info('For the latest information, check your local health department\'s website.')
 with col2:
 		if st.button("Learn More"):
 			disclaimer()
@@ -74,6 +75,13 @@ if selected_state and selected_county:
 		match selected_state:
 			case 'new york':
 				data = data_collection.get_NY_health_inspection_data(selected_county)
+				data = data.style.map(helpers.ny_color_column, subset=['Risk Score'])
+
+			case 'pennsylvania':
+				st.warning("Note: The database we have access to for PA is out of date.")
+				data = data_collection.get_PA_health_inspection_data(selected_county)
+				data = data.style.map(helpers.pa_color_column, subset=['Passed Inspection'])
+
 			case _:
 				data = 'state not supported'
 elif selected_state:
@@ -89,7 +97,7 @@ if type(data) == str and selected_state:
 
 		Try searching for:      *[Your County/City]* Health Department restaurant inspections
 		""")
-elif isinstance(data, pd.DataFrame) and data.empty:
+elif isinstance(data, (pd.DataFrame, pd.io.formats.style.Styler)) and helpers.is_empty(data):
 	st.markdown(f"""
 		#### Sorry, we don't have data for {selected_county} yet.
 
@@ -97,6 +105,6 @@ elif isinstance(data, pd.DataFrame) and data.empty:
 
 		Try searching for:      *[Your County/City]* Health Department restaurant inspections
 		""")
-elif isinstance(data, pd.DataFrame):
-	df = data.style.applymap(helpers.color_column, subset=['Risk Score'])
-	st.dataframe(df, hide_index=True)
+elif isinstance(data, (pd.DataFrame, pd.io.formats.style.Styler)):
+	data = data.apply(helpers.highlight_alternate_rows)
+	st.dataframe(data, hide_index=True)
