@@ -7,13 +7,24 @@ from sodapy import Socrata
 from dotenv import load_dotenv
 load_dotenv()
 
-amongus = chr(sum(range(ord(min(str(not()))))))  # The among us character, lol
+# === PREREQUISITES ===
+st.set_page_config(
+	page_title='Resturant Health Inspection Records',
+	page_icon=":shark:",
+	menu_items={
+		'Get Help': 'https://www.linktogithubrepo.com',
+		'Report a bug': "https://www.linktogithubrepo/issues.com",
+		'About': "https://www.linktoanotherpagethatdescribeshowtouseit.com"
+	}
+)
+st.warning('For the latest information, check your local health department\'s website.')
 
 with st.spinner('Loading...'):
 	print("\n  ----- Checking Prerequisites -----\n")
 	helpers.ensure_county_data_is_installed()
 	helpers.ensure_sql_database_exists()
 	print("\n  ----- Prerequisites Complete -----\n")
+
 
 
 # === HERO ===
@@ -38,7 +49,7 @@ selected_county = st.selectbox(label='Select County', options=list_of_counties,
 
 
 
-# === Getting and printing data ===
+# === GETTING INSPECTION DATA ===
 df = None
 match selected_state:
 	case 'new york':
