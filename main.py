@@ -17,13 +17,28 @@ st.set_page_config(
 		'About': "https://www.linktoanotherpagethatdescribeshowtouseit.com"
 	}
 )
-st.warning('For the latest information, check your local health department\'s website.')
 
 with st.spinner('Loading...'):
 	print("\n  ----- Checking Prerequisites -----\n")
 	helpers.ensure_county_data_is_installed()
 	helpers.ensure_sql_database_exists()
 	print("\n  ----- Prerequisites Complete -----\n")
+
+@st.dialog("Disclaimer")
+def disclaimer():
+    st.markdown(f"""
+    This app pulls data from multiple sources, with the majority coming from government databases. However, some states do not provide public access to their databases via APIs, while others only allow API access through third-party services. This creates challenges for development, as we are left with two main options: use the available API, which may provide incomplete or outdated data, or download the database in bulk, which can quickly become outdated (often within a month or two).
+
+    As a result, obtaining up-to-date data can be difficult. This app is designed to give you a rough idea of the cleanliness of nearby restaurants, but it may not always reflect the most current information. Additionally, keep in mind that some agencies only require health inspections 1-3 times per year.
+
+    For the most up-to-date information, we recommend searching for:      [Your County/City] Health Department restaurant inspections.
+    """)
+col1, col2 = st.columns([5, 1])
+with col1:
+		st.warning('For the latest information, check your local health department\'s website.')
+with col2:
+		if st.button("Learn More"):
+			disclaimer()
 
 
 
