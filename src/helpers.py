@@ -53,18 +53,18 @@ def loc_state():
 
 def color_column(score):
 	if score == 'N/A':
-		return f'background-color: None'
+		return f'background-color: black'
 	try:
 		score = float(score)
 	except ValueError:
-		return f'background-color: None'
+		return f'background-color: black'
 
 	if score >= 6:
 		color = '#9e382f'  # Red
 	elif score >= 4:
-		color = '#cca42c'  # Orange
+		color = '#896018'  # Orange
 	else:
-		color = '#519924'  # Green
+		color = '#4a7231'  # Green
 	return f'background-color: {color}'
 
 
