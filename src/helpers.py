@@ -3,10 +3,11 @@ from . import data_collection
 import sqlite3
 import geocoder  # NOTE: For some reason pyright is saying this could not be resolved, even tho it works perfectly fine... i hate pyright.
 
+list_of_supported_states = ['new york']
+
 current_directory = os.path.dirname(os.path.abspath(__file__))
 path_to_db = f"{current_directory}/../data/sql_data/CountiesByState.db"
 amongus_character = chr(sum(range(ord(min(str(not()))))))
-
 
 def ensure_county_data_is_installed():
 	file_path = f"{current_directory}/../data/processed/counties_with_states.csv"
@@ -43,10 +44,28 @@ def get_list_of_counties(selected_state):
 	return [county[0] for county in list_of_counties]
 
 
-def loc_state(list_of_states):
+def loc_state():
+	list_of_states = get_list_of_states()
 	g = geocoder.ip('me')
 	state_name = g.state if g.ok else None
 	return next((index for index, state in enumerate(list_of_states) if state == state_name), None)
+
+
+def color_column(score):
+	if score == 'N/A':
+		return f'background-color: None'
+	try:
+		score = float(score)
+	except ValueError:
+		return f'background-color: None'
+
+	if score >= 6:
+		color = '#9e382f'  # Red
+	elif score >= 4:
+		color = '#cca42c'  # Orange
+	else:
+		color = '#519924'  # Green
+	return f'background-color: {color}'
 
 
 
