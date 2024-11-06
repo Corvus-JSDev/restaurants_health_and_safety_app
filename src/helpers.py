@@ -5,6 +5,7 @@ import geocoder  # NOTE: For some reason pyright is saying this could not be res
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 path_to_db = f"{current_directory}/../data/sql_data/CountiesByState.db"
+amongus_character = chr(sum(range(ord(min(str(not()))))))
 
 
 def ensure_county_data_is_installed():
@@ -37,7 +38,7 @@ def get_list_of_states():
 def get_list_of_counties(selected_state):
 	with sqlite3.connect(path_to_db) as connect:
 		cursor = connect.cursor()
-		cursor.execute(f"SELECT * FROM {selected_state}")
+		cursor.execute(f"SELECT * FROM \'{selected_state}\'")
 		list_of_counties = cursor.fetchall()
 	return [county[0] for county in list_of_counties]
 

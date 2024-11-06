@@ -1,9 +1,15 @@
+from re import L
 import censusdis.data as ced
 from censusdis.datasets import ACS5
 import censusdis.states as states
 import pandas as pd
 import os
 import sqlite3
+from sodapy import Socrata
+from datetime import date
+from dateutil.relativedelta import relativedelta
+from dotenv import load_dotenv
+load_dotenv()
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,3 +35,72 @@ def create_sql_database():
 			# Create the tables and populate them
 			state_counties.to_sql(state, connect, if_exists='replace', index=False)
 
+
+NY_APP_TOKEN = os.getenv('NY_APP_TOKEN')
+def get_NY_health_inspection_data(county, resturant_name=''):
+	county = county.split()[0].upper()  # The reason we use upper is because gov APIs suck.
+	resturant_query = f'AND facility == \'{resturant_name}\'' if resturant_name else ''
+	county_query = f'AND county == \'{county}\'' if county else ''
+
+	# The query that will be pulling only the needed data (pulling data from 5 years ago from today)
+	query = f"""
+	SELECT
+	    *
+	WHERE
+	    date > '{str(date.today() - relativedelta(years=5))}'
+	"""
+
+	# Getting the data itself
+	client = Socrata("health.data.ny.gov", NY_APP_TOKEN)
+	results = client.get("cnih-y5dw", query=query)
+	client.close()
+
+	df = pd.DataFrame.from_records(results)
+
+	df = df.loc[ df['county'] == county ]
+
+	# This is here because for some reason NY doesn't want to share their data for some counties. Can you tell I hate working with gov APIs yet? Like honestly, how hard is it to have data for all of YOUR OWN counties?
+	if df.empty:
+		return df
+
+
+	# Add a count of one to all the rows so when we group them we can count how many inspections that place has had over the given time
+	df['Number Of Inspections'] = 1
+	# Converting objs to ints
+	df['total_critical_violations'] = df['total_critical_violations'].astype(int)
+	df['total_crit_not_corrected'] = df['total_crit_not_corrected'].astype(int)
+	df['total_noncritical_violations'] = df['total_noncritical_violations'].astype(int)
+
+	# Grouping and renameing
+	df = df.groupby('address').agg({
+	    "facility": 'last',
+	    "total_critical_violations": "sum",
+	    "total_crit_not_corrected": "sum",
+	    "total_noncritical_violations": "sum",
+	    "Number Of Inspections": "sum",
+	    'date': 'min'
+	}).reset_index().rename(columns={
+	    "facility": 'Name',
+	    "total_critical_violations": "Critical Violations",
+	    "total_crit_not_corrected": "Repeat Violations",
+	    "total_noncritical_violations": "Minor Violations",
+	    'date': 'Earliest Recorded Inspection',
+		'address': 'Address'
+	})
+
+
+	def calc_risk_score(row):
+		inspection_count = row['Number Of Inspections']
+		if inspection_count < 3:
+			return "N/A"
+		else:
+			answer = (((row['Repeat Violations'] + (0.50 * row['Repeat Violations'])) + row['Critical Violations'] + (row['Minor Violations'] - (0.30 * row['Minor Violations']))) / inspection_count)
+			return round(answer, 1)
+
+	# Finishing touches
+	df['Risk Score'] = df.apply(calc_risk_score, axis=1)
+	df['Name'] = df['Name'].str.title()
+	df['Address'] = df['Address'].str.title()
+	df['Earliest Recorded Inspection'] = df['Earliest Recorded Inspection'].str.split('T').str.get(0)
+
+	return df
