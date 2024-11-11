@@ -46,6 +46,7 @@ with col2:
 # === HERO ===
 st.title("App Name")
 st.write("Find how discussing the restaurants you go to really are (still a work in progress...)")
+st.write(f'Supported States: {", ".join(helpers.list_of_supported_states).title()}')
 
 
 
@@ -88,23 +89,26 @@ elif selected_state:
 	data = "state not supported" if selected_state not in helpers.list_of_supported_states else None
 
 
-# Formatting and displaying data
-if type(data) == str and selected_state:
+# Displaying data and coloring its rows
+if data == None:
+	# This if statement is needed because, for reasons I can not figure out, a rare error will pop up where it says "AttributeError: module 'pandas.io.formats' has no attribute 'style'" so this is here to hide that.
+	st.write(" ")
+elif type(data) == str and selected_state:
 	st.markdown(f"""
 		#### Uh-oh, we currently do not have access to {selected_state.title()}\'s inspection data.
 
 		This could be due to a few reasons. Most commonly, your state may not provide public access to its inspection data via APIs. Another possibility is that since this app is still in its early stages, the developers have not yet researched, processed, or implemented data for every state.
 
-		Try searching for:      *[Your County/City]* Health Department restaurant inspections
+		Try searching for:   *[Your County/City]* Health Department restaurant inspections
 		""")
-elif isinstance(data, (pd.DataFrame, pd.io.formats.style.Styler)) and helpers.is_empty(data):
+elif isinstance(data, pd.io.formats.style.Styler) and data.data.empty:
 	st.markdown(f"""
 		#### Sorry, we don't have data for {selected_county} yet.
 
-		This app is still being worked on, and not all states share their health data or allow us to get live updates.
+		This app is still being worked on, and not all states share their health data or allow us to get live updates for all of their counties.
 
-		Try searching for:      *[Your County/City]* Health Department restaurant inspections
+		Try searching for:   *[Your County/City]* Health Department restaurant inspections
 		""")
-elif isinstance(data, (pd.DataFrame, pd.io.formats.style.Styler)):
+elif isinstance(data, pd.io.formats.style.Styler):
 	data = data.apply(helpers.highlight_alternate_rows)
 	st.dataframe(data, hide_index=True)

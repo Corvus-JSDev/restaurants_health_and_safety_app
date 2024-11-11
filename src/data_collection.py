@@ -1,4 +1,3 @@
-#from re import L
 import censusdis.data as ced
 from censusdis.datasets import ACS5
 import censusdis.states as states

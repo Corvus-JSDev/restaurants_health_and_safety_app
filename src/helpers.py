@@ -4,7 +4,7 @@ from . import data_collection
 import sqlite3
 import geocoder  # NOTE: For some reason pyright is saying this could not be resolved, even tho it works perfectly fine... i hate pyright.
 
-list_of_supported_states = ['new york', 'pennsylvania']
+list_of_supported_states = sorted(['new york', 'pennsylvania'])
 
 color_red = '#fc5050'
 color_orange = '#fcbc4e'
@@ -59,15 +59,6 @@ def loc_state():
 	return next((index for index, state in enumerate(list_of_states) if state == state_name), None)
 
 
-def is_empty(obj):
-    if isinstance(obj, pd.DataFrame):
-        return obj.empty
-    elif isinstance(obj, pd.io.formats.style.Styler):
-        return obj.data.empty
-    else:
-        raise TypeError("Input must be a pandas DataFrame or Styler.")
-
-
 def ny_color_column(score):
 	if score == 'N/A':
 		return f'color: {color_default};'
@@ -84,6 +75,7 @@ def ny_color_column(score):
 	else:
 		color = color_green
 	return f'color: {color};'
+
 
 def pa_color_column(passed):
 	if passed == 'Yes':
