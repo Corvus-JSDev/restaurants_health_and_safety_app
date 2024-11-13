@@ -28,11 +28,11 @@ with st.spinner('Loading Page...'):
 @st.dialog("Disclaimer")
 def disclaimer():
     st.markdown(f"""
+    For the most up-to-date information, we recommend searching for:      [Your County/City] Health Department restaurant inspections.
+
     This app pulls data from multiple sources, with the majority coming from government databases. However, some states do not provide public access to their databases via APIs, while others only allow API access through third-party services. This creates challenges for development, as we are left with two main options: use the available API, which may provide incomplete or outdated data, or download the database in bulk, which can quickly become outdated (often within a month or two).
 
-    As a result, obtaining up-to-date data can be difficult. This app is designed to give you a rough idea of the cleanliness of nearby restaurants, but it may not always reflect the most current information. Additionally, keep in mind that some agencies only require health inspections 1-3 times per year.
-
-    For the most up-to-date information, we recommend searching for:      [Your County/City] Health Department restaurant inspections.
+    As a result, obtaining up-to-date data can be difficult. This app is designed to give you a rough idea of the cleanliness of nearby restaurants, but it may not always reflect the most current information. Also, keep in mind that some agencies only require health inspections 1-3 times per year.
     """)
 col1, col2 = st.columns([5, 1])
 with col1:
@@ -44,14 +44,18 @@ with col2:
 
 
 # === HERO ===
-st.title("App Name")
-st.write("Find how discussing the restaurants you go to really are (still a work in progress...)")
-st.write(f'Supported States: {", ".join(helpers.list_of_supported_states).title()}')
+st.markdown(f"""
+## Restaurant Health Inspection Reports
 
+Just enter your state and county (or city) to see a list of local restaurants and their health inspection records. It’s an easy way to check how your favorite spots stack up when it comes to cleanliness and safety!
+
+Supported States: {", ".join(helpers.list_of_supported_states).title()}
+""")
+st.write(" ")
 
 
 # === LOCATION SELECTION ===
-st.markdown('##### Select State')
+st.markdown('#### Select State')
 selected_state = st.selectbox(label='Select State',
 	options=helpers.get_list_of_states(),
 	index=helpers.loc_state(),
@@ -59,7 +63,7 @@ selected_state = st.selectbox(label='Select State',
 selected_state = selected_state.lower() if selected_state else None
 
 
-st.markdown('##### Select County/City')
+st.markdown('#### Select County/City')
 selected_county = st.selectbox(label='Select County',
 	options=helpers.get_list_of_counties(selected_state) if selected_state else ['Please select your state'],
 	index=None,
