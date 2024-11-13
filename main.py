@@ -8,6 +8,8 @@ from sodapy import Socrata
 from dotenv import load_dotenv
 load_dotenv()
 
+
+
 # === PREREQUISITES ===
 st.set_page_config(
 	page_title='Resturant Health Inspection Records',
@@ -54,7 +56,12 @@ Supported States: {", ".join(helpers.list_of_supported_states).title()}
 st.write(" ")
 
 
+
 # === LOCATION SELECTION ===
+if "disabled_selectbox" not in st.session_state:
+    st.session_state.disabled_selectbox = False
+
+
 st.markdown('#### Select State')
 selected_state = st.selectbox(label='Select State',
 	options=helpers.get_list_of_states(),
@@ -62,12 +69,18 @@ selected_state = st.selectbox(label='Select State',
 	placeholder='Find your state', label_visibility='collapsed')
 selected_state = selected_state.lower() if selected_state else None
 
+if not selected_state or selected_state not in helpers.list_of_supported_states:
+	st.session_state.disabled_selectbox = True
+else:
+	st.session_state.disabled_selectbox = False
+
 
 st.markdown('#### Select County/City')
 selected_county = st.selectbox(label='Select County',
 	options=helpers.get_list_of_counties(selected_state) if selected_state else ['Please select your state'],
-	index=None,
-	placeholder='Find your county', label_visibility='collapsed')
+	index=None, key="county_selection",
+	placeholder='Find your county', label_visibility='collapsed',
+	disabled=st.session_state.disabled_selectbox)
 
 
 
@@ -93,7 +106,7 @@ elif selected_state:
 
 
 # Displaying data and coloring its rows
-if data == None:
+if type(data) == None:
 	# This if statement is needed because, for reasons I can not figure out, a rare error will pop up where it says "AttributeError: module 'pandas.io.formats' has no attribute 'style'" so this is here to hide that.
 	st.write(" ")
 elif type(data) == str and selected_state:
