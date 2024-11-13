@@ -1,9 +1,7 @@
-import censusdis.data as ced
-from censusdis.datasets import ACS5
-import censusdis.states as states
 import pandas as pd
 import os
 import sqlite3
+from src import styling
 from sodapy import Socrata
 from datetime import date
 from dateutil.relativedelta import relativedelta
@@ -13,41 +11,19 @@ load_dotenv()
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
 
-def download_list_of_counties():
-	counties_df = ced.download(
-	    dataset=ACS5,
-	    vintage=2022,
-	    download_variables=["NAME"],
-	    state=states.ALL_STATES,
-	    county="*"
-	)
-	counties_df[['county', 'state']] = counties_df['NAME'].str.split(', ', expand=True)
-	counties_df.drop(columns=['NAME', 'STATE', 'COUNTY'], inplace=True)  # We don't need these columns
-	counties_df.to_csv(f'{current_directory}/../data/processed/counties_with_states.csv', index=False)
 
-
-# FIX: Delaware's database table should be a list of cities, not counties.
-def create_sql_database():
-	df = pd.read_csv(f'{current_directory}/../data/processed/counties_with_states.csv')
-	with sqlite3.connect(f'{current_directory}/../data/sql_data/CountiesByState.db') as connect:
-		for state in df['state'].unique():
-			state_counties = df.loc[ df['state'] == state ][['county']]
-			# Create the tables and populate them
-			state_counties.to_sql(state, connect, if_exists='replace', index=False)
 
 
 NY_APP_TOKEN = os.getenv('NY_APP_TOKEN') or None
 def get_NY_health_inspection_data(county, resturant_name=''):
-	county = county.split()[0].upper()  # The reason we use upper is because gov APIs suck.
+	county = county.split()[0].upper()
 	resturant_query = f'AND facility == \'{resturant_name}\'' if resturant_name else ''
-	county_query = f'AND county == \'{county}\'' if county else ''
+	county_query = f'county == \'{county}\'' if county else ''
 
-	# The query that will be pulling only the needed data (pulling data from 5 years ago from today)
 	query = f"""
 	SELECT
 	    *
 	WHERE
-	    date > {str(date.today() - relativedelta(years=5))}T00:00:00.000
 		{county_query}
 	LIMIT
 		20000
@@ -65,9 +41,8 @@ def get_NY_health_inspection_data(county, resturant_name=''):
 		return df
 
 
-	# Add a count of one to all the rows so when we group them we can count how many inspections that place has had over the given time
+	# Formatting
 	df['Number Of Inspections'] = 1
-	# Converting objs to ints
 	df['total_critical_violations'] = df['total_critical_violations'].astype(int)
 	df['total_crit_not_corrected'] = df['total_crit_not_corrected'].astype(int)
 	df['total_noncritical_violations'] = df['total_noncritical_violations'].astype(int)
@@ -85,7 +60,7 @@ def get_NY_health_inspection_data(county, resturant_name=''):
 	    "total_critical_violations": "Critical Violations",
 	    "total_crit_not_corrected": "Repeat Violations",
 	    "total_noncritical_violations": "Minor Violations",
-	    'date': 'Earliest Recorded Inspection',
+	    'date': 'Earliest Recorded Inspection (Y-M-D)',
 		'address': 'Address'
 	})
 
@@ -102,53 +77,67 @@ def get_NY_health_inspection_data(county, resturant_name=''):
 	df['Risk Score'] = df.apply(calc_risk_score, axis=1)
 	df['Name'] = df['Name'].str.title()
 	df['Address'] = df['Address'].str.title()
-	df['Earliest Recorded Inspection'] = df['Earliest Recorded Inspection'].str.split('T').str.get(0)
+	df['Earliest Recorded Inspection (Y-M-D)'] = df['Earliest Recorded Inspection (Y-M-D)'].str.split('T').str.get(0)
 
-	df = df.rename(columns={'Earliest Recorded Inspection': "Earliest Recorded Inspection (Y-M-D)"})
 	# Moves the risk score and name column to the front
 	cols = ['Risk Score', 'Name'] + [col for col in df.columns if col != 'Risk Score' and col != 'Name']
+	df = df[cols]
+
+	# Style the df
+	styled_df = df.style.map(styling.ny_color_column, subset=['Risk Score'])
+
+	return styled_df
 
 
-	return df[cols]
+
 
 
 PA_APP_TOKEN = os.getenv('PA_APP_TOKEN') or None
 def get_PA_health_inspection_data(county, resturant_name=''):
-    county = county.split()[0].title()
-    county_query = f'county_name == \'{county}\'' if county else ''
-    resturant_query = f'AND facility == \'{resturant_name}\'' if resturant_name else ''
+	county = county.split()[0].title()
+	county_query = f'county_name == \'{county}\'' if county else ''
+	resturant_query = f'AND facility == \'{resturant_name}\'' if resturant_name else ''
 
-    # The query that will be pulling only the needed data (pulling data from 5 years ago from today)
-    query = f"""
-    SELECT
-        *
-    WHERE
-        {county_query}
-    LIMIT
-    	50000
-    """
+	query = f"""
+	SELECT
+		*
+	WHERE
+		{county_query}
+	LIMIT
+		50000
+	"""
 
-    # Getting the data itself
-    client = Socrata("data.pa.gov", PA_APP_TOKEN)
-    results = client.get("etb6-jzdg", query=query)
-    client.close()
+	# Getting the data itself
+	client = Socrata("data.pa.gov", PA_APP_TOKEN)
+	results = client.get("etb6-jzdg", query=query)
+	client.close()
 
-    df = pd.DataFrame.from_records(results).fillna("N/A").rename(columns={
-        'public_facility_name': "Name",
-        'address': "Address",
-        'city': "City",
-        'inspection_date': "Inspection Date",
-        'inspection_reason_type': "Reason For Inspection",
-        'overall_compliance': "Passed Inspection",
-    })
-    df = df[['Passed Inspection', 'Name', 'Address', 'City', 'Inspection Date', 'Reason For Inspection']]
+	df = pd.DataFrame.from_records(results)
+	if df.empty:
+		return df
 
-    if df.empty:
-        return df
+	# Filling nulls and renaming
+	df = df.fillna("N/A").rename(columns={
+		'public_facility_name': "Name",
+		'address': "Address",
+		'city': "City",
+		'inspection_date': "Inspection Date",
+		'inspection_reason_type': "Reason For Inspection",
+		'overall_compliance': "Passed Inspection",
+	})
 
-    df.drop_duplicates("Name", keep='last', inplace=True)
-    df['Inspection Date'] = df['Inspection Date'].str.split('T').str.get(0)
-    return df
+	# Formatting
+	df = df[['Passed Inspection', 'Name', 'Address', 'City', 'Inspection Date', 'Reason For Inspection']]
+	df.drop_duplicates(subset=['Address'], keep='last', inplace=True)
+	df['Inspection Date'] = df['Inspection Date'].str.split('T').str.get(0)
+
+	# Styling
+	styled_df = df.style.map(styling.pa_color_column, subset=['Passed Inspection'])
+
+	return styled_df
+
+
+
 
 
 # Sign up for an app token here: https://data.delaware.gov/profile/edit/developer_settings
@@ -158,7 +147,7 @@ def get_DE_health_inspection_data(city=''):
 	SELECT
 		*
 	WHERE
-		insp_date > {str(date.today() - relativedelta(years=1))}T00:00:00.000
+		insp_date > {str(date.today() - relativedelta(years=2))}T00:00:00.000
 	LIMIT
 		30000
 	"""
@@ -168,12 +157,11 @@ def get_DE_health_inspection_data(city=''):
 	results = client.get("384s-wygj")
 	client.close()
 
-    # Convert to df and make sure there is stuff inside
 	df = pd.DataFrame.from_records(results)
 	if df.empty:
 		return df
 
-	# Filtering by city if the user so choses
+	# Filtering by city
 	if city:
 		df = df.loc[ df['restcity'] == city ]
 
@@ -189,7 +177,7 @@ def get_DE_health_inspection_data(city=''):
 	df['Total Violations'] = 1
 	df['Earliest Recorded Inspection'] = df['Earliest Recorded Inspection'].str.split('T').str.get(0)
 
-	# Grouping the list
+	# Grouping
 	df = df.groupby('Address').agg({
 		'Name': 'first',
 		'City': 'first',
@@ -199,10 +187,15 @@ def get_DE_health_inspection_data(city=''):
 		'Total Violations': 'sum'
 	}).reset_index()
 
-	# More formatting to make it look pretty
+	# Even more formatting
 	df['Violation Code(s)'] = df['Violation Code(s)'].apply(lambda x: ' | '.join(x))
 	df['Description'] = df['Description'].apply(lambda x: ' | '.join(x))
 
+	# Move this column to the front
 	cols = ['Total Violations'] + [col for col in df.columns if col != 'Total Violations']
+	df = df[cols]
 
-	return df[cols]
+	# Styling
+	styled_df = df.style.map(styling.de_color_column, subset=['Total Violations'])
+
+	return styled_df

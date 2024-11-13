@@ -1,6 +1,6 @@
 from censusdis.impl.geometry import T
 import streamlit as st  # python3 -m streamlit run main.py
-from src import helpers
+from src import helpers, styling
 from src import data_collection
 import os
 import pandas as pd
@@ -11,7 +11,7 @@ load_dotenv()
 # === PREREQUISITES ===
 st.set_page_config(
 	page_title='Resturant Health Inspection Records',
-	page_icon=":shark:",
+	page_icon=":shark:",  # TODO: Get a real favicon
 	menu_items={
 		'Get Help': 'https://www.linktogithubrepo.com',
 		'Report a bug': "https://www.linktogithubrepo/issues.com",
@@ -19,7 +19,7 @@ st.set_page_config(
 	}
 )
 
-with st.spinner('Loading...'):
+with st.spinner('Loading Page...'):
 	print("\n  ----- Checking Prerequisites -----\n")
 	helpers.ensure_county_data_is_installed()
 	helpers.ensure_sql_database_exists()
@@ -60,9 +60,9 @@ selected_state = selected_state.lower() if selected_state else None
 
 
 st.markdown('##### Select County/City')
-list_of_counties = helpers.get_list_of_counties(selected_state) if selected_state else ['Please select your state']
 selected_county = st.selectbox(label='Select County',
-	options=list_of_counties, index=None,
+	options=helpers.get_list_of_counties(selected_state) if selected_state else ['Please select your state'],
+	index=None,
 	placeholder='Find your county', label_visibility='collapsed')
 
 
@@ -76,20 +76,14 @@ if selected_state and selected_county:
 		match selected_state:
 			case 'new york':
 				data = data_collection.get_NY_health_inspection_data(selected_county)
-				data = data.style.map(helpers.ny_color_column, subset=['Risk Score'])
-
 			case 'pennsylvania':
 				st.warning("Note: The database we have access to for PA is out of date.")
 				data = data_collection.get_PA_health_inspection_data(selected_county)
-				data = data.style.map(helpers.pa_color_column, subset=['Passed Inspection'])
-
 			case 'delaware':
 				data = data_collection.get_DE_health_inspection_data(selected_county)
-				data = data.style.map(helpers.de_color_column, subset=['Total Violations'])
 
 			case _:
 				data = 'state not supported'
-
 elif selected_state:
 	data = "state not supported" if selected_state not in helpers.list_of_supported_states else None
 
@@ -115,5 +109,5 @@ elif isinstance(data, pd.io.formats.style.Styler) and data.data.empty:
 		Try searching for:   *[Your County/City]* Health Department restaurant inspections
 		""")
 elif isinstance(data, pd.io.formats.style.Styler):
-	data = data.apply(helpers.highlight_alternate_rows)
+	data = data.apply(styling.highlight_alternate_rows)
 	st.dataframe(data, hide_index=True)
