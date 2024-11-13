@@ -59,7 +59,7 @@ selected_state = st.selectbox(label='Select State',
 selected_state = selected_state.lower() if selected_state else None
 
 
-st.markdown('##### Select County')
+st.markdown('##### Select County/City')
 list_of_counties = helpers.get_list_of_counties(selected_state) if selected_state else ['Please select your state']
 selected_county = st.selectbox(label='Select County',
 	options=list_of_counties, index=None,
@@ -83,8 +83,13 @@ if selected_state and selected_county:
 				data = data_collection.get_PA_health_inspection_data(selected_county)
 				data = data.style.map(helpers.pa_color_column, subset=['Passed Inspection'])
 
+			case 'delaware':
+				data = data_collection.get_DE_health_inspection_data(selected_county)
+				data = data.style.map(helpers.de_color_column, subset=['Total Violations'])
+
 			case _:
 				data = 'state not supported'
+
 elif selected_state:
 	data = "state not supported" if selected_state not in helpers.list_of_supported_states else None
 

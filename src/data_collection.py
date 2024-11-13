@@ -26,6 +26,7 @@ def download_list_of_counties():
 	counties_df.to_csv(f'{current_directory}/../data/processed/counties_with_states.csv', index=False)
 
 
+# FIX: Delaware's database table should be a list of cities, not counties.
 def create_sql_database():
 	df = pd.read_csv(f'{current_directory}/../data/processed/counties_with_states.csv')
 	with sqlite3.connect(f'{current_directory}/../data/sql_data/CountiesByState.db') as connect:
@@ -46,8 +47,10 @@ def get_NY_health_inspection_data(county, resturant_name=''):
 	SELECT
 	    *
 	WHERE
-	    date > '{str(date.today() - relativedelta(years=5))}'
+	    date > {str(date.today() - relativedelta(years=5))}T00:00:00.000
 		{county_query}
+	LIMIT
+		20000
 	"""
 
 	# Getting the data itself
@@ -121,6 +124,8 @@ def get_PA_health_inspection_data(county, resturant_name=''):
         *
     WHERE
         {county_query}
+    LIMIT
+    	50000
     """
 
     # Getting the data itself
@@ -144,3 +149,60 @@ def get_PA_health_inspection_data(county, resturant_name=''):
     df.drop_duplicates("Name", keep='last', inplace=True)
     df['Inspection Date'] = df['Inspection Date'].str.split('T').str.get(0)
     return df
+
+
+# Sign up for an app token here: https://data.delaware.gov/profile/edit/developer_settings
+DE_APP_TOKEN = os.getenv('DE_APP_TOKEN') or None
+def get_DE_health_inspection_data(city=''):
+	query = f"""
+	SELECT
+		*
+	WHERE
+		insp_date > {str(date.today() - relativedelta(years=1))}T00:00:00.000
+	LIMIT
+		30000
+	"""
+
+	# Getting the data itself
+	client = Socrata("data.delaware.gov", DE_APP_TOKEN)
+	results = client.get("384s-wygj")
+	client.close()
+
+    # Convert to df and make sure there is stuff inside
+	df = pd.DataFrame.from_records(results)
+	if df.empty:
+		return df
+
+	# Filtering by city if the user so choses
+	if city:
+		df = df.loc[ df['restcity'] == city ]
+
+	# Formatting
+	df = df.fillna("N/A").rename(columns={
+		'restname': 'Name',
+		'restaddress': 'Address',
+		'restcity': 'City',
+		'insp_date': 'Earliest Recorded Inspection',
+		'violation': 'Violation Code(s)',
+		'vio_desc': 'Description',
+	}).drop(columns=['geocoded_column', 'restzip', 'insp_type'])
+	df['Total Violations'] = 1
+	df['Earliest Recorded Inspection'] = df['Earliest Recorded Inspection'].str.split('T').str.get(0)
+
+	# Grouping the list
+	df = df.groupby('Address').agg({
+		'Name': 'first',
+		'City': 'first',
+		'Earliest Recorded Inspection': 'min',
+		'Violation Code(s)': list,
+		'Description': list,
+		'Total Violations': 'sum'
+	}).reset_index()
+
+	# More formatting to make it look pretty
+	df['Violation Code(s)'] = df['Violation Code(s)'].apply(lambda x: ' | '.join(x))
+	df['Description'] = df['Description'].apply(lambda x: ' | '.join(x))
+
+	cols = ['Total Violations'] + [col for col in df.columns if col != 'Total Violations']
+
+	return df[cols]
