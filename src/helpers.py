@@ -41,13 +41,23 @@ def ensure_sql_database_exists():
 	if not os.path.exists(path_to_db):
 		print('\033[33m SQL database not found. Creating database... \033[0m')
 
-		# FIX: Delaware's database table should be a list of cities, not counties.
+
+		# === Create a default SQL table with all their counties inside them ===
 		df = pd.read_csv(f'{current_directory}/../data/processed/counties_with_states.csv')
 		with sqlite3.connect(f'{current_directory}/../data/sql_data/CountiesByState.db') as connect:
+			cursor = connect.cursor()
+
 			for state in df['state'].unique():
 				state_counties = df.loc[ df['state'] == state ][['county']]
 				# Create the tables and populate them
 				state_counties.to_sql(state, connect, if_exists='replace', index=False)
+
+			# === Edit the few states where we have to use cities instead ===
+			list_DE_cities = ['Wilmington', 'Seaford', 'Bethany Beach', 'Rehoboth Beach', 'Dover', 'Middletown', 'Hockessin', 'New Castle', 'Newark', 'Selbyville', 'Bear', 'Bridgeville', 'Newport', 'Laurel', 'Milford', 'Smyrna', 'Millsboro', 'Houston', 'Wyoming', 'Millville', 'Lewes', 'Greenville', 'Ocean View', 'Harrington', 'Greenwood', 'Felton', 'Dagsboro']
+			cursor.execute("DELETE FROM Delaware")
+			for city in list_DE_cities:
+				cursor.execute("INSERT INTO Delaware (county) VALUES (?)", (city,))
+
 
 		print('\033[32m  \u2713 Database created. \033[0m')
 	else:
@@ -60,6 +70,7 @@ def get_list_of_states():
 		cursor = connect.cursor()
 		cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
 		list_of_states = cursor.fetchall()
+
 	return [state[0] for state in list_of_states]
 
 
@@ -69,6 +80,7 @@ def get_list_of_counties(selected_state):
 		cursor = connect.cursor()
 		cursor.execute(f"SELECT * FROM \'{selected_state}\'")
 		list_of_counties = cursor.fetchall()
+
 	return [county[0] for county in list_of_counties]
 
 
