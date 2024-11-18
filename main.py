@@ -101,7 +101,7 @@ elif selected_state:
 
 
 # Displaying data and coloring its rows
-if type(data) == None:
+if data == None:
 	# This if statement is needed because, for reasons I can not figure out, a rare error will pop up where it says "AttributeError: module 'pandas.io.formats' has no attribute 'style'" so this is here to hide that.
 	st.write(" ")
 elif type(data) == str and selected_state:
