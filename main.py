@@ -1,13 +1,8 @@
-from censusdis.impl.geometry import T
 import streamlit as st  # python3 -m streamlit run main.py
 from src import helpers, styling
 from src import data_collection
 import os
 import pandas as pd
-from sodapy import Socrata
-from dotenv import load_dotenv
-load_dotenv()
-
 
 
 # === PREREQUISITES ===
