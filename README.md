@@ -7,6 +7,8 @@ The project leverages a combination of Python, relevant libraries, and API integ
 
 *As a proof of concept, this project is still in development and only supports the following US states: New York, Pennsylvania, and Delaware. This project can benefit greatly from the help of the open-source community and other collaborators to reach its full potential.*
 
+![Project Showcase](data/imgs/project-showcase.png)
+
 
 
 # Technologies Utilized
