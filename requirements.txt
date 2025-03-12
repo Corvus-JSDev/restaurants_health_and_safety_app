@@ -114,6 +114,7 @@ language-selector==0.1
 launchpadlib==2.0.0
 lazr.restfulclient==0.14.6
 lazr.uri==1.0.6
+libvirt-python==8.0.0
 livereload==2.7.0
 lockfile==0.12.2
 logargparser==0.1.1
@@ -265,6 +266,8 @@ webcolors==24.8.0
 webencodings==0.5.1
 websocket-client==1.8.0
 Werkzeug==2.0.2
+WoeUSB-ng==0.2.12
+wxPython==4.0.7
 xdg==6.0.0
 xkit==0.0.0
 xyzservices==2024.9.0
