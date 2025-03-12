@@ -8,7 +8,7 @@ import pandas as pd
 # === PREREQUISITES ===
 st.set_page_config(
 	page_title='Resturant Health Inspection Records',
-	page_icon=":shark:",  # TODO: Get a real favicon
+	page_icon=":shark:",  # TODO: Get a real favicon.
 	menu_items={
 		'Get Help': 'https://www.linktogithubrepo.com',
 		'Report a bug': "https://www.linktogithubrepo/issues.com",
@@ -25,7 +25,8 @@ with st.spinner('Loading Page...'):
 @st.dialog("Disclaimer")
 def disclaimer():
     st.markdown(f"""
-    For the most up-to-date information, we recommend searching for:      [Your County/City] Health Department restaurant inspections.
+    For the most up-to-date information, we recommend searching for:
+    "[Your County/City] Health Department restaurant inspections."
 
     This app pulls data from multiple sources, with the majority coming from government databases. However, some states do not provide public access to their databases via APIs, while others only allow API access through third-party services. This creates challenges for development, as we are left with two main options: use the available API, which may provide incomplete or outdated data, or download the database in bulk, which can quickly become outdated (often within a month or two).
 
