@@ -1,3 +1,7 @@
+![preview image](https://github.com/Corvus-JSDev/restaurants_health_and_safety_app/blob/main/data/imgs/project-showcase.png)
+
+![demo video](https://github.com/Corvus-JSDev/restaurants_health_and_safety_app/blob/main/data/imgs/dinesafe_demo_video.gif)
+
 # Project Overview
 
 This web application is designed to provide users with easy access to comprehensive, country-wide restaurant health inspection data, all in one centralized platform. By utilizing APIs to aggregate public health inspection records from various government databases, this app enables consumers to quickly assess the cleanliness and safety standards of restaurants they’re considering.
