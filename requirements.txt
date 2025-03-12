@@ -106,11 +106,6 @@ jupyterlab_pygments==0.3.0
 jupyterlab_server==2.27.3
 keyring==25.3.0
 kiwisolver==1.4.7
-language-selector==0.1
-launchpadlib==2.0.0
-lazr.restfulclient==0.14.6
-lazr.uri==1.0.6
-libvirt-python==8.0.0
 livereload==2.7.0
 lockfile==0.12.2
 logargparser==0.1.1
@@ -165,7 +160,6 @@ pluggy==1.5.0
 prometheus_client==0.20.0
 prompt_toolkit==3.0.47
 protobuf==5.27.3
-psutil==6.0.0
 ptyprocess==0.7.0
 pure_eval==0.2.3
 py==1.11.0
@@ -173,7 +167,6 @@ pyarrow==16.1.0
 pycairo==1.20.1
 pycodestyle==2.12.1
 pycparser==2.22
-pycups==2.0.1
 pydeck==0.9.1
 pyelftools==0.31
 pyflakes==3.2.0
@@ -194,11 +187,8 @@ pytest-cov==5.0.0
 pytest-forked==1.6.0
 pytest-sugar==1.0.0
 pytest-xdist==3.6.1
-python-apt===2.4.0-ubuntu4-zorin1
 python-dateutil==2.9.0.post0
-python-debian==0.1.49
 python-dotenv==1.0.1
-python-json-logger==2.0.7
 pytz==2024.1
 pyxdg==0.28
 PyYAML==6.0.2
@@ -251,9 +241,6 @@ typer==0.12.4
 types-python-dateutil==2.9.0.20240821
 typing_extensions==4.12.2
 tzdata==2024.1
-ubuntu-drivers-common==0.0.0
-ufw==0.36.1
-unattended-upgrades==0.1
 uri-template==1.3.0
 urllib3==2.2.2
 usingversion==0.1.2
@@ -264,13 +251,8 @@ webcolors==24.8.0
 webencodings==0.5.1
 websocket-client==1.8.0
 Werkzeug==2.0.2
-WoeUSB-ng==0.2.12
-wxPython==4.0.7
 xdg==6.0.0
 xkit==0.0.0
 xyzservices==2024.9.0
 yarg==0.1.9
 zipp==3.20.0
-zorin-appearance==5.3
-zorin-connect==1.2
-zorin-exec-guard==1.5
